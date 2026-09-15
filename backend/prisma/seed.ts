@@ -1,0 +1,24 @@
+import { PrismaClient, Role, AttendanceStatus, AnnouncementAudience, FeeStatus, DayOfWeek } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+const prisma = new PrismaClient();
+async function main(){
+ await prisma.feePayment.deleteMany(); await prisma.feeRecord.deleteMany(); await prisma.assignment.deleteMany(); await prisma.announcement.deleteMany(); await prisma.timetableEntry.deleteMany(); await prisma.attendance.deleteMany(); await prisma.teacherSubject.deleteMany(); await prisma.classSubject.deleteMany(); await prisma.studentParent.deleteMany(); await prisma.student.deleteMany(); await prisma.parent.deleteMany(); await prisma.section.deleteMany(); await prisma.teacher.deleteMany(); await prisma.subject.deleteMany(); await prisma.schoolClass.deleteMany(); await prisma.user.deleteMany();
+ const passwordHash=await bcrypt.hash('School@123',12);
+ const admin=await prisma.user.create({data:{email:'admin@brightwood.edu',passwordHash,firstName:'Aarav',lastName:'Sharma',phone:'+91 98765 10001',role:Role.ADMIN}});
+ const teacherUser=await prisma.user.create({data:{email:'teacher@brightwood.edu',passwordHash,firstName:'Meera',lastName:'Kapoor',phone:'+91 98765 10002',role:Role.TEACHER,teacher:{create:{employeeNo:'T-1001',qualification:'M.Sc., B.Ed.'}}},include:{teacher:true}});
+ const parentUser=await prisma.user.create({data:{email:'parent@brightwood.edu',passwordHash,firstName:'Rohan',lastName:'Verma',phone:'+91 98765 10003',role:Role.PARENT,parent:{create:{occupation:'Architect'}}},include:{parent:true}});
+ const klass=await prisma.schoolClass.create({data:{name:'Grade 8',sortOrder:8}});
+ const section=await prisma.section.create({data:{name:'A',classId:klass.id,classTeacherId:teacherUser.teacher!.id,capacity:36}});
+ const math=await prisma.subject.create({data:{code:'MATH-08',name:'Mathematics',color:'#2783DE'}}); const science=await prisma.subject.create({data:{code:'SCI-08',name:'Science',color:'#46A171'}});
+ await prisma.classSubject.createMany({data:[{classId:klass.id,subjectId:math.id},{classId:klass.id,subjectId:science.id}]});
+ await prisma.teacherSubject.createMany({data:[{teacherId:teacherUser.teacher!.id,subjectId:math.id,sectionId:section.id},{teacherId:teacherUser.teacher!.id,subjectId:science.id,sectionId:section.id}]});
+ const students=[]; for(const [i,n] of ['Ananya Verma','Kabir Singh','Diya Patel','Vivaan Rao','Ishaan Gupta'].entries()){ const [firstName,lastName]=n.split(' '); const u=await prisma.user.create({data:{email:i===0?'student@brightwood.edu':`student${i+1}@brightwood.edu`,passwordHash,firstName,lastName,role:Role.STUDENT,student:{create:{admissionNo:`BW-2026-${String(i+1).padStart(3,'0')}`,sectionId:section.id,dateOfBirth:new Date(2013,2+i,10),address:'Green Park, New Delhi'}}},include:{student:true}}); students.push(u.student!); }
+ await prisma.studentParent.create({data:{studentId:students[0].id,parentId:parentUser.parent!.id,relationship:'Father',isPrimary:true}});
+ const today=new Date(); today.setHours(0,0,0,0); for(const [i,s] of students.entries()) await prisma.attendance.create({data:{studentId:s.id,sectionId:section.id,date:today,status:i===3?AttendanceStatus.LATE:AttendanceStatus.PRESENT,markedById:teacherUser.teacher!.id}});
+ await prisma.timetableEntry.createMany({data:[{sectionId:section.id,subjectId:math.id,teacherId:teacherUser.teacher!.id,day:DayOfWeek.MONDAY,period:1,startsAt:'08:30',endsAt:'09:15',room:'8A'},{sectionId:section.id,subjectId:science.id,teacherId:teacherUser.teacher!.id,day:DayOfWeek.MONDAY,period:2,startsAt:'09:20',endsAt:'10:05',room:'Lab 2'},{sectionId:section.id,subjectId:math.id,teacherId:teacherUser.teacher!.id,day:DayOfWeek.TUESDAY,period:2,startsAt:'09:20',endsAt:'10:05',room:'8A'}]});
+ await prisma.announcement.createMany({data:[{title:'Welcome to Brightwood',body:'A warm welcome to the new academic term. Let’s make it a joyful year of learning.',audience:AnnouncementAudience.ALL,pinned:true,authorId:admin.id},{title:'Science exhibition registrations',body:'Team registrations close this Friday. Speak with your science teacher to participate.',audience:AnnouncementAudience.STUDENT,authorId:admin.id}]});
+ await prisma.assignment.create({data:{title:'Linear equations practice',description:'Complete questions 1–12 from worksheet 4. Show your working clearly.',sectionId:section.id,subjectId:math.id,teacherId:teacherUser.teacher!.id,dueAt:new Date(Date.now()+4*86400000)}});
+ const fee=await prisma.feeRecord.create({data:{studentId:students[0].id,label:'Term 1 Tuition',amount:28500,amountPaid:15000,status:FeeStatus.PARTIAL,dueDate:new Date(Date.now()+10*86400000)}}); await prisma.feePayment.create({data:{feeRecordId:fee.id,amount:15000,method:'Bank transfer',reference:'BW-DEMO-001'}});
+ console.log('Seeded. Demo password for all accounts: School@123');
+}
+main().catch(console.error).finally(()=>prisma.$disconnect());

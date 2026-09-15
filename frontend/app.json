@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Brightwood School",
+    "slug": "brightwood-school",
+    "scheme": "brightwood",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-splash-screen",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E5F2FC"
+      }
+    }
+  }
+}

@@ -1,0 +1,3 @@
+import type { ErrorRequestHandler,RequestHandler } from 'express'; import { ZodError } from 'zod'; import { AppError } from '../lib/http.js';
+export const notFound:RequestHandler=(req,_res,next)=>next(new AppError(404,`Route ${req.method} ${req.path} not found`,'NOT_FOUND'));
+export const errorHandler:ErrorRequestHandler=(err,_req,res,_next)=>{if(err instanceof ZodError)return res.status(422).json({success:false,error:{code:'VALIDATION_ERROR',message:'Please check the submitted fields',details:err.flatten()}}); const status=err instanceof AppError?err.statusCode:500; res.status(status).json({success:false,error:{code:err.code||'INTERNAL_ERROR',message:status===500?'Something went wrong':err.message}})};

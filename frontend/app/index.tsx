@@ -1,0 +1,1 @@
+import { Redirect } from 'expo-router'; import { useAuth } from '@/store/auth'; import { StateView } from '@/components/ui'; export default function Index(){const {user,loading}=useAuth();if(loading)return <StateView loading title="Opening Brightwood" body="Preparing your school day…"/>;return <Redirect href={user?'/(tabs)':'/welcome'}/>}

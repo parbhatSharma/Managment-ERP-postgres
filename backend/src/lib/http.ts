@@ -1,0 +1,1 @@
+import type { Response } from 'express'; export const ok=(res:Response,data:unknown,meta?:unknown)=>res.json({success:true,data,...(meta?{meta}:{})}); export class AppError extends Error{constructor(public statusCode:number,message:string,public code='APP_ERROR'){super(message)}}

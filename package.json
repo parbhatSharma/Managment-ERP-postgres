@@ -1,0 +1,4 @@
+{
+  "name":"school-erp-mvp","private":true,"workspaces":["backend","frontend"],
+  "scripts":{"dev:api":"npm --workspace backend run dev","dev:app":"npm --workspace frontend start","typecheck":"npm run typecheck --workspaces","db:up":"docker compose up -d db","db:down":"docker compose down"}
+}
